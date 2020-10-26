@@ -1,12 +1,10 @@
 # Fance Repair (POJ 3253)
-  
-Farmer John wants to repair a small length of the fence around the pasture. He measures the fence and finds that he needs N (1 ≤ N ≤ 20,000) planks of wood, each having some integer length Li (1 ≤ Li ≤ 50,000) units. He then purchases a single long board just long enough to saw into the N planks (i.e., whose length is the sum of the lengths Li). FJ is ignoring the "kerf", the extra length lost to sawdust when a sawcut is made; you should ignore it, too.
 
-FJ sadly realizes that he doesn't own a saw with which to cut the wood, so he mosies over to Farmer Don's Farm with this long board and politely asks if he may borrow a saw.
+You want to cut a board with a length of sum (L) into N planks so that each plank has a length of L1, L2, ..., Ln. When cutting the board to length x and y, it costs x + y. What is the minimum cost?
 
-Farmer Don, a closet capitalist, doesn't lend FJ a saw but instead offers to charge Farmer John for each of the N-1 cuts in the plank. The charge to cut a piece of wood is exactly equal to its length. Cutting a plank of length 21 costs 21.
-
-Farmer Don then lets Farmer John decide the order and locations to cut the plank. Help Farmer John determine the minimum amount of money he can spend to create the N planks. FJ knows that he can cut the board in various different orders which will result in different charges since the resulting intermediate planks are of different lengths.
+Constraint
+* 1 ≤ N ≤ 20,000
+* 1 ≤ Li ≤ 50,000
 
 ## Examples
 
@@ -14,7 +12,7 @@ Farmer Don then lets Farmer John decide the order and locations to cut the plank
 Input:
 
   N = 4
-  A = { 8, 5, 8 }
+  L = { 8, 5, 8 }
 
 Output:
 
@@ -28,7 +26,63 @@ The length of the original board is 21 (= 8 + 5 + 8). The first cut will cost 21
 
 # Approach
 
+From observing the below binary trees that represent how the board is cut when the cutting cost is minimum, we can find that the smaller a plank is, the later it is cut.
+In other words, the total minimum cost can be caluculated by merging the cutting cost of the smallest plank one by one in the bottom up order.
+
+```
+ L: [ 4, 5, 6, 8, 10 ]
+ SUM(L): 33
+
+         33
+        /  \
+       19  14
+      / \  / \
+    10  9  8  6
+       / \
+      5   4
+```
+
+|plank length|cost|total|
+|------------|----|-----|
+|  4 +  5    |   9|    9|
+|  6 +  8    |  14|   23|
+|  9 + 10    |  19|   42|
+| 14 + 19    |  33|   75|
+
+
+```
+ L: [ 1, 2, 3, 4, 5, 6, 7, 8 ]
+ SUM(L): 36
+
+              36
+             /  \
+           21    15
+          / \    / \
+        12   9  8   7
+        / \ / \
+       6  6 5  4
+      / \
+     3   3
+    / \
+   2   1
+
+```
+
+|plank length|cost|total|
+|------------|----|-----|
+|  1 +  2    |   3|    3|
+|  3 +  3    |   6|    9|
+|  4 +  5    |   9|   18|
+|  6 +  6    |  12|   30|
+|  7 +  8    |  15|   45|
+|  9 + 12    |  21|   66|
+| 21 + 15    |  36|  102|
+
+
 # Complexity Analysis
 
-* Time Complexity: O(N^2)
+* Time Complexity: O(N*logN)
+
+  Time complexity of min heap insertion (Priority Queue) is O(LogN). For each cut, a new cost is entered to the priority queue. There are total N - 1 cuts.
+
 * Space Complexity: O(N)
