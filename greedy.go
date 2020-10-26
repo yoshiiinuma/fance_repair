@@ -1,14 +1,63 @@
 
 package greedy
 
-import "fmt"
+import (
+  "container/heap"
+  "fmt"
+)
 
 const DEBUG = true
 
-func swap(L []int, i, j int) {
-  temp := L[j]
-  L[j] = L[i]
-  L[i] = temp
+type PriorityQueue []int
+
+func (pq PriorityQueue) Len() int { return len(pq) }
+func (pq PriorityQueue) Less(i, j int) bool { return pq[i] < pq[j] }
+func (pq PriorityQueue) Swap(i, j int) { pq[i], pq[j] = pq[j], pq[i] }
+
+func (pq *PriorityQueue) Push(val interface{}) {
+  *pq = append(*pq, val.(int))
+}
+
+func (pq *PriorityQueue) Pop() interface{} {
+  last := len(*pq) - 1
+  val := (*pq)[last]
+  *pq = (*pq)[:last]
+  return val
+}
+
+func createPriorityQueue(L []int) *PriorityQueue {
+  N := len(L)
+  pq := make(PriorityQueue, 0)
+  heap.Init(&pq)
+  for i := 0; i < N; i++ {
+    heap.Push(&pq, L[i])
+  }
+  return &pq
+}
+
+/**
+ * Generates a PriorityQueue from the given array
+ * Returns the following accessors to the queue
+ *
+ *  - push(int)
+ *  - pop() int
+ *  - print()
+ *
+ */
+func getPriorityQueueAccessors(L []int) (func(int), func() int, func() int, func()) {
+  pq := createPriorityQueue(L)
+  return func(val int) {           /* push */
+      heap.Push(pq, val)
+    },
+    func() int {                   /* pop */
+      return heap.Pop(pq).(int)
+    },
+    func() int {                   /* len */
+      return len(*pq)
+    },
+    func() {                       /* print */
+      fmt.Printf("%v", *pq)
+    }
 }
 
 func GreedyFanceRepair(L []int) int {
@@ -18,30 +67,31 @@ func GreedyFanceRepair(L []int) int {
     fmt.Println("-----------------------------------------")
   }
   N := len(L)
-  var cost int
+  if N == 0 {
+    return 0
+  } else if N == 1 {
+    return L[0]
+  }
   total := 0
-  first := 0
-  second := 1
-  if L[first] > L[second] { swap(L, first, second) }
-  for i := 1; i < N; i++ {
-    for j := i; j < N; j++ {
-      if L[j] < L[first] {
-        second = first
-        first = j
-      } else  if L[j] < L[second] {
-        second = j
-      }
-    }
-    cost = L[first] + L[second]
+  pushToPQ, popFromPQ, lenPQ, printPQ := getPriorityQueueAccessors(L)
+  if DEBUG {
+    fmt.Printf("total %d: ", total)
+    printPQ()
+    fmt.Println("\n-----------------------------------------")
+  }
+
+  for lenPQ() > 1 {
+    first := popFromPQ()
+    second := popFromPQ()
+    cost := first + second
     total += cost
-    swap(L, i - 1, first)
-    swap(L, i, second)
+    pushToPQ(cost)
     if DEBUG {
-      fmt.Printf("i %d first %d second %d cost %d: %v\n", i, L[i-1], L[i], cost, L)
+      fmt.Printf("total %d cost %d (= %d + %d): ", total, cost, first, second)
+      printPQ()
+      fmt.Println()
     }
-    L[i] = cost
-    first = i
-    second = i + 1
   }
   return total
 }
+
